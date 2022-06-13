@@ -1,0 +1,24 @@
+{
+  "type": "library",
+  "license": "MIT",
+  "name": "juniorgrossi/php-pdo",
+  "description": "PDO written in pure php",
+  "keywords": ["database"],
+  "authors": [
+    {
+      "name": "Dmitry Litvin",
+      "email": "your@name.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=8.1",
+    "ext-odbc": "*",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "PHPPDO": "src/"
+    }
+  }
+}
