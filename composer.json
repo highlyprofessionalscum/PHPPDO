@@ -1,7 +1,7 @@
 {
   "type": "library",
   "license": "MIT",
-  "name": "juniorgrossi/php-pdo",
+  "name": "highlyprofessionalscum/php-pdo",
   "description": "PDO written in pure php",
   "keywords": ["database"],
   "authors": [
@@ -13,8 +13,7 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=8.1",
-    "ext-odbc": "*",
-    "ext-pdo": "*"
+    "ext-odbc": "*"
   },
   "autoload": {
     "psr-4": {
