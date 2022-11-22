@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-class PDOStatement{
+namespace PHPPDO\Statement;
+
+class PDOStatement
+{
 
     public function __construct()
     {

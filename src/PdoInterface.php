@@ -1,5 +1,7 @@
 <?php
 
+use PHPPDO\Statement\PDOStatement;
+
 interface PdoInterface
 {
 
@@ -128,7 +130,7 @@ interface PdoInterface
 
     public function query(string $query, ?int $fetchMode = null): PDOStatement|false;
 
-    public function quote(string $string, int $type = PDO::PARAM_STR): string|false;
+    public function quote(string $string, int $type = PdoInterface::PARAM_STR): string|false;
 
     public function rollBack(): bool;
 

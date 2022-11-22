@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 
+use PHPPDO\Statement\PDOStatement;
+
 class PDO implements PdoInterface
 {
 
