@@ -1,7 +1,5 @@
 <?php
-
-use PHPPDO\Statement\PDOStatement;
-
+namespace PhpPdo;
 interface PdoInterface
 {
 
@@ -107,6 +105,7 @@ interface PdoInterface
     public const   SQLITE_ATTR_READONLY_STATEMENT    = 1001;
     public const   SQLITE_ATTR_EXTENDED_RESULT_CODES = 1002;
 
+    public const FETCH_DEFAULT = self::FETCH_BOTH;
 
     public function beginTransaction(): bool;
 
@@ -116,7 +115,7 @@ interface PdoInterface
 
     public function errorInfo(): array;
 
-    public function exec(string $statement): int|false;
+    public function exec(string $statement);
 
     public function getAttribute(int $attribute): mixed;
 
@@ -124,13 +123,13 @@ interface PdoInterface
 
     public function inTransaction(): bool;
 
-    public function lastInsertId(?string $name = null): string|false;
+    public function lastInsertId(?string $name = null);
 
-    public function prepare(string $query, array $options = []): PDOStatement|false;
+    public function prepare(string $query, array $options = []);
 
-    public function query(string $query, ?int $fetchMode = null): PDOStatement|false;
+    public function query(string $query, ?int $fetchMode = null);
 
-    public function quote(string $string, int $type = PdoInterface::PARAM_STR): string|false;
+    public function quote(string $string, int $type = PhpPdo::PARAM_STR);
 
     public function rollBack(): bool;
 
