@@ -10,10 +10,14 @@ $ phpunit
 EOT;
     exit(1);
 }
+
 use PhpPdo\PhpPdo;
 header('Content-Type: text/html; charset=utf-8');
-$pdo = new PhpPdo('pdo3');
+
+odbc_close_all();
+$pdo = new PhpPdo('pdo3', 'user', 'secret');
+
 $res = $pdo->prepare('select * from test;');
-$t = $res->fetchAll();
-var_dump($res->errorInfo());
+$res->execute();
+$t = $res->fetchAll(PhpPdo::FETCH_ASSOC);
 var_dump($t);

@@ -18,7 +18,7 @@ class PhpPdo implements PhpPdoInterface
                                 ?string $password = null,
                                 ?array $options = null)
     {
-        $this->driver = new OdbcDriver($dsn);
+        $this->driver = new OdbcDriver($dsn, (string)$username, (string)$password);
     }
 
     public function beginTransaction(): bool

@@ -37,10 +37,10 @@ class OdbcDriver implements DriverInterface
 
     public function fetchRow($statement)
     {
-        return odbc_fetch_array($statement);
+         return odbc_fetch_array($statement);
     }
 
-    public function fetchFieds($statement)
+    public function fetchFieds($statement): array
     {
         $fieldsCount = odbc_num_fields($statement);
 

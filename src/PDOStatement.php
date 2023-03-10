@@ -17,27 +17,42 @@ class PDOStatement implements IteratorAggregate
     private $handle;
     private DriverInterface $driver;
 
+    /**  */
+    private ?array $fields = null;
+
     private function __construct()
     {
     }
 
     public function execute(): bool
     {
+        $this->fields = null;
+
         return odbc_execute($this->handle);
     }
 
-    public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT): array
+    public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
     {
-        return $this->fetch($mode);
+        $result = [];
+        while ($r = $this->fetchRowInternal($mode, $second, $third)) {
+            $result[] = $r;
+        }
+
+        return $result;
+    }
+
+    public function fetch(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
+    {
+        return $this->fetchRowInternal($mode, $second, $third);
     }
 
 
-    private function fetch($mode, $className = 'stdClass')
+    private function fetchRowInternal(int $mode, $second, $third)
     {
-        $result= [];
+        $temp = [];
         $fields = $this->fetchFields();
         while ($r = $this->driver->fetchRow($this->handle)) {
-            $temp = [];
+
             foreach ($fields as $fieldNum => $fieldValue) {
                 if (PhpPdo::FETCH_ASSOC === $mode) {
                     $temp[$fieldValue['name']] = $r[$fieldValue['name']];
@@ -46,22 +61,48 @@ class PDOStatement implements IteratorAggregate
                 } elseif ((PhpPdo::FETCH_BOTH === $mode) || (PhpPdo::FETCH_DEFAULT === $mode)) {
                     $temp[] = $temp[$fieldValue['name']] = $r[$fieldValue['name']];
                 } elseif (PhpPdo::FETCH_OBJ === $mode) {
-                    $temp = $this->fetchObject($r, $className);
+                    $temp = $this->fetchObject($r);
+                } elseif (PhpPdo::FETCH_CLASS=== $mode) {
+                    $class = $second ?: 'stdClass';
+                    $temp = $this->fetchClass($fieldValue['name'], $r[$fieldValue['name']], $class, $third);
                 } else {
                     throw new PDOException('Wrong Mode!');
                 }
 
             }
 
-            $result[] = $temp;
+            break;
         }
 
-        return $result;
+        return $temp;
+    }
+
+    private function fetchClass($fieldname,, string $class, ?array $constructorArgs): object
+    {
+        $reflectionClass = new \ReflectionClass($class);
+        $class = $reflectionClass->newInstanceWithoutConstructor();
+
+        foreach ($r as $item) {
+
+        }
+        $reflectionProperty = $reflectionClass->getProperty('driver');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($result, $this->driver);
+        $reflectionProperty->setAccessible(false);
+
+        if (null !== $constructorArgs) {
+            $class->__construct($constructorArgs);
+        }
+
+        return $class;
     }
 
     private function fetchFields(): array
     {
-        return $this->driver->fetchFieds($this->handle);
+        if (null === $this->fields) {
+            $this->fields = $this->driver->fetchFieds($this->handle);
+        }
+        return $this->fields;
     }
 
     public function errorInfo(): string
@@ -74,9 +115,9 @@ class PDOStatement implements IteratorAggregate
         // TODO: Implement getIterator() method.
     }
 
-    private function fetchObject($r, $className = 'stdClass')
+    private function fetchObject($r)
     {
-        $obj = new $className();
+        $obj = new \stdClass();
         foreach ($r as $fieldName => $fieldValue) {
             $obj->$fieldName = $fieldValue;
         }
