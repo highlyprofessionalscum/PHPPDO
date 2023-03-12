@@ -7,6 +7,8 @@ namespace PhpPdo;
 use IteratorAggregate;
 use PDOException;
 use PhpPdo\Driver\DriverInterface;
+use PhpPdo\Test\Php\TestBase;
+use PHPUnit\Util\Test;
 
 /**
  * Represents a prepared statement and, after the statement is executed, an associated result set.
@@ -22,6 +24,7 @@ class PDOStatement implements IteratorAggregate
 
     private function __construct()
     {
+        echo __METHOD__ . "($row,{$this->id})\n";
     }
 
     public function execute(): bool
@@ -49,49 +52,63 @@ class PDOStatement implements IteratorAggregate
 
     private function fetchRowInternal(int $mode, $second, $third)
     {
-        $temp = [];
         $fields = $this->fetchFields();
-        while ($r = $this->driver->fetchRow($this->handle)) {
+        $r = $this->driver->fetchRow($this->handle);
 
-            foreach ($fields as $fieldNum => $fieldValue) {
-                if (PhpPdo::FETCH_ASSOC === $mode) {
-                    $temp[$fieldValue['name']] = $r[$fieldValue['name']];
-                } elseif (PhpPdo::FETCH_NUM === $mode) {
-                    $temp[] = $r[$fieldValue['name']];
-                } elseif ((PhpPdo::FETCH_BOTH === $mode) || (PhpPdo::FETCH_DEFAULT === $mode)) {
-                    $temp[] = $temp[$fieldValue['name']] = $r[$fieldValue['name']];
-                } elseif (PhpPdo::FETCH_OBJ === $mode) {
-                    $temp = $this->fetchObject($r);
-                } elseif (PhpPdo::FETCH_CLASS=== $mode) {
-                    $class = $second ?: 'stdClass';
-                    $temp = $this->fetchClass($fieldValue['name'], $r[$fieldValue['name']], $class, $third);
-                } else {
-                    throw new PDOException('Wrong Mode!');
-                }
-
-            }
-
-            break;
+        if (false === $r) {
+            return false;
         }
 
-        return $temp;
+        if (PhpPdo::FETCH_ASSOC === $mode) {
+            return $r;
+        } elseif (PhpPdo::FETCH_NUM === $mode) {
+            return array_values($r);
+        } elseif ((PhpPdo::FETCH_BOTH === $mode) || (PhpPdo::FETCH_DEFAULT === $mode)) {
+            return array_merge($r, array_values($r));
+        } elseif (PhpPdo::FETCH_OBJ === $mode) {
+            return (object)$r;
+        } elseif (PhpPdo::FETCH_CLASS === $mode) {
+            if(null === $second){
+                $second = '\stdClass';
+            }
+            return $this->fetchClass($fields, $r, $second, $third);
+        } else {
+            throw new PDOException('Wrong Mode!');
+        }
+
+        throw new PDOException('Something wrong!');
     }
 
-    private function fetchClass($fieldname,, string $class, ?array $constructorArgs): object
+    private function fetchClass($fields, $r, ?string $class = 'stdClass', ?array $constructorArgs = null): object
     {
         $reflectionClass = new \ReflectionClass($class);
         $class = $reflectionClass->newInstanceWithoutConstructor();
 
-        foreach ($r as $item) {
-
+        $properties = [];
+        foreach ($reflectionClass->getProperties() as $reflectionProperty) {
+            $properties[$reflectionProperty->getName()] = 1;
         }
-        $reflectionProperty = $reflectionClass->getProperty('driver');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($result, $this->driver);
-        $reflectionProperty->setAccessible(false);
+
+        foreach ($r as $field => $value) {
+            if (array_key_exists($field, $properties)) {
+                $p = $reflectionClass->getProperty($field);
+
+                if (version_compare(PHP_VERSION, '8.1.0', '<')) {
+                    $p->setAccessible(true);
+                }
+
+                $p->setValue($class, $value);
+
+                if (version_compare(PHP_VERSION, '8.1.0', '<')) {
+                    $p->setAccessible(false);
+                }
+            } else {
+                $class->{$field} = $value;
+            }
+        }
 
         if (null !== $constructorArgs) {
-            $class->__construct($constructorArgs);
+            $class->__construct(...$constructorArgs);
         }
 
         return $class;
@@ -113,15 +130,5 @@ class PDOStatement implements IteratorAggregate
     public function getIterator()
     {
         // TODO: Implement getIterator() method.
-    }
-
-    private function fetchObject($r)
-    {
-        $obj = new \stdClass();
-        foreach ($r as $fieldName => $fieldValue) {
-            $obj->$fieldName = $fieldValue;
-        }
-
-        return $obj;
     }
 }
