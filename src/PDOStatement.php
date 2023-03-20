@@ -37,28 +37,36 @@ class PDOStatement implements IteratorAggregate
 
     public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
     {
+        $flags = $mode & self::PDO_FETCH_FLAGS;
+        $how   = $mode & ~self::PDO_FETCH_FLAGS;
+
         $result = [];
-        while ($r = $this->fetchRowInternal($mode, $second, $third)) {
-            if (PhpPdo::FETCH_GROUP & $mode ){
-                echo '111';
+        while ($r = $this->fetchRowInternal($flags, $how, $second, $third)) {
+            if (PhpPdo::FETCH_GROUP & $flags){
+                $f = array_shift($r);
+                $result[$f[0]][] = $r;
+            } else {
+                $result[] = $r;
             }
-            $result[] = $r;
         }
 
         return $result;
     }
 
-    public function fetch(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
+    /**
+     * @param int $mode
+     * @param $second
+     * @param $third
+     * @return array|false|object
+     */
+    public function fetch(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null)
     {
         return $this->fetchRowInternal($mode, $second, $third);
     }
 
 
-    private function fetchRowInternal(int $mode, $second, $third)
+    private function fetchRowInternal(int $flags, int $how, $second, $third)
     {
-        $flags = $mode & self::PDO_FETCH_FLAGS;
-        $how   = $mode & ~self::PDO_FETCH_FLAGS;
-
         $fields = $this->fetchFields();
         $r = $this->driver->fetchRow($this->handle);
 
@@ -76,7 +84,7 @@ class PDOStatement implements IteratorAggregate
             return (object)$r;
         } elseif (PhpPdo::FETCH_CLASS === $how) {
             if(null === $second){
-                $second = '\stdClass';
+                return (object)$r;
             }
             return $this->fetchClass($fields, $r, $second, $third);
         } else {

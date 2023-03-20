@@ -39,7 +39,7 @@ final class pdo_006Test extends TestCase
         $stmt->execute();
         $res = $stmt->fetchAll(PhpPdo::FETCH_NUM|PhpPdo::FETCH_GROUP);
         $this->assertSame("1",  $res['A'][0][0]);
-        $this->assertSame("2",  $res['A'][1][1]);
+        $this->assertSame("2",  $res['A'][1][0]);
         $this->assertSame("3",  $res['C'][0][0]);
 
         $stmt->execute();
@@ -47,6 +47,5 @@ final class pdo_006Test extends TestCase
         $this->assertSame("1",  $res['A'][0]['id']);
         $this->assertSame("2",  $res['A'][1]['id']);
         $this->assertSame("3",  $res['C'][0]['id']);
-
     }
 }
