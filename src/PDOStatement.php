@@ -15,16 +15,17 @@ use PHPUnit\Util\Test;
  */
 class PDOStatement implements IteratorAggregate
 {
+    private const PDO_FETCH_FLAGS =0xFFFF0000;  /* fetchAll() modes or'd to PDO_FETCH_XYZ */
+
     public string $queryString;
     private $handle;
     private DriverInterface $driver;
 
     /**  */
-    private ?array $fields = null;
+    private ?array $fields = null; //  cache for query fields definition
 
     private function __construct()
     {
-        echo __METHOD__ . "($row,{$this->id})\n";
     }
 
     public function execute(): bool
@@ -38,6 +39,9 @@ class PDOStatement implements IteratorAggregate
     {
         $result = [];
         while ($r = $this->fetchRowInternal($mode, $second, $third)) {
+            if (PhpPdo::FETCH_GROUP & $mode ){
+                echo '111';
+            }
             $result[] = $r;
         }
 
@@ -52,6 +56,9 @@ class PDOStatement implements IteratorAggregate
 
     private function fetchRowInternal(int $mode, $second, $third)
     {
+        $flags = $mode & self::PDO_FETCH_FLAGS;
+        $how   = $mode & ~self::PDO_FETCH_FLAGS;
+
         $fields = $this->fetchFields();
         $r = $this->driver->fetchRow($this->handle);
 
@@ -59,15 +66,15 @@ class PDOStatement implements IteratorAggregate
             return false;
         }
 
-        if (PhpPdo::FETCH_ASSOC === $mode) {
+        if (PhpPdo::FETCH_ASSOC === $how) {
             return $r;
-        } elseif (PhpPdo::FETCH_NUM === $mode) {
+        } elseif (PhpPdo::FETCH_NUM === $how) {
             return array_values($r);
-        } elseif ((PhpPdo::FETCH_BOTH === $mode) || (PhpPdo::FETCH_DEFAULT === $mode)) {
+        } elseif ((PhpPdo::FETCH_BOTH === $how) || (PhpPdo::FETCH_DEFAULT === $how)) {
             return array_merge($r, array_values($r));
-        } elseif (PhpPdo::FETCH_OBJ === $mode) {
+        } elseif (PhpPdo::FETCH_OBJ === $how) {
             return (object)$r;
-        } elseif (PhpPdo::FETCH_CLASS === $mode) {
+        } elseif (PhpPdo::FETCH_CLASS === $how) {
             if(null === $second){
                 $second = '\stdClass';
             }

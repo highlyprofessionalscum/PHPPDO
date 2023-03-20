@@ -105,6 +105,13 @@ interface PdoInterface
     public const   SQLITE_ATTR_READONLY_STATEMENT    = 1001;
     public const   SQLITE_ATTR_EXTENDED_RESULT_CODES = 1002;
 
+
+#define PDO_FETCH_GROUP     0x00010000  /* fetch into groups */
+#define PDO_FETCH_UNIQUE    0x00030000  /* fetch into groups assuming first col is unique */
+#define PDO_FETCH_CLASSTYPE 0x00040000  /* fetch class gets its class name from 1st column */
+#define PDO_FETCH_SERIALIZE 0x00080000  /* fetch class instances by calling serialize */
+#define PDO_FETCH_PROPS_LATE 0x00100000  /* fetch props after calling ctor */
+
     public const FETCH_DEFAULT = self::FETCH_BOTH;
 
     public function beginTransaction(): bool;

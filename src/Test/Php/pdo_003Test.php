@@ -23,7 +23,7 @@ final class pdo_003Test extends TestCase
         }
     }
 
-    public function test_FETCH_NUM(): void
+    public function test_FETCH_BOTH(): void
     {
         $db = new PhpPdo('pdo3');
         $db->exec('CREATE TABLE test(id int NOT NULL PRIMARY KEY, val VARCHAR(10))');
