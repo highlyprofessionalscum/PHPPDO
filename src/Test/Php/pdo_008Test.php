@@ -3,27 +3,12 @@ declare(strict_types=1);
 
 namespace PhpPdo\Test\Php;
 
-use PhpPdo\PdoInterface;
-use PHPUnit\Framework\TestCase;
+use PhpPdo\Test\PhpPdoTestCase;
 
 use PhpPdo\PhpPdo;
 
-class pdo_008Test extends TestCase
+class pdo_008Test extends PhpPdoTestCase
 {
-
-    public function setUp(): void
-    {
-        $db = new PhpPdo('pdo3');
-        $test_tables = array(
-            'test',
-            'test2',
-            'classtypes'
-        );
-        foreach ($test_tables as $table) {
-            $db->exec("DROP TABLE $table");
-        }
-    }
-
 
     public function test_FETCH_UNIQUE(): void
     {
