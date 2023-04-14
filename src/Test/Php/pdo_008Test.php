@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 use PhpPdo\PhpPdo;
 
-class pdo_007Test extends TestCase
+class pdo_008Test extends TestCase
 {
 
     public function setUp(): void
@@ -34,20 +34,13 @@ class pdo_007Test extends TestCase
         $db->exec("INSERT INTO test VALUES('B', 'A')");
         $db->exec("INSERT INTO test VALUES('C', 'C')");
 
-        $stmt = $db->prepare('SELECT id, val from test');
+        $stmt = $db->prepare('SELECT val, id from test');
 
         $stmt->execute();
         $res = $stmt->fetchAll(PhpPdo::FETCH_NUM | PhpPdo::FETCH_UNIQUE);
 
-        $this->assertSame('A', $res['A'][0]);
-        $this->assertSame('A', $res['B'][0]);
-        $this->assertSame('C', $res['C'][0]);
-
-        $stmt->execute();
-        $res = $stmt->fetchAll(PhpPdo::FETCH_ASSOC | PhpPdo::FETCH_UNIQUE);
-        $this->assertSame('A', $res['A']['val']);
-        $this->assertSame('A', $res['B']['val']);
-        $this->assertSame('C', $res['C']['val']);
+        $this->assertSame('B', $res['A'][0]);
+        $this->assertSame('C', $res['D'][0]);
 
     }
 
