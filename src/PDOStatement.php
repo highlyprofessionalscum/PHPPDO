@@ -40,8 +40,10 @@ class PDOStatement implements IteratorAggregate
 
         $result = [];
         while ($r = $this->fetchRowInternal($flags, $how, $second, $third)) {
-            if (PhpPdo::FETCH_GROUP & $flags){
-                $f = \array_shift($r);
+            if (($flags & PhpPdo::FETCH_UNIQUE) === PhpPdo::FETCH_UNIQUE) {
+                $result[array_shift($r)] = $r;
+            }elseif ((PhpPdo::FETCH_GROUP & $flags)) {
+                $f = array_shift($r);
                 $result[$f[0]][] = $r;
             } else {
                 $result[] = $r;
