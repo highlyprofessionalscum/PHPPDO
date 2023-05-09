@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace PhpPdo;
 
-use IteratorAggregate;
+use \IteratorAggregate;
 use PDOException;
 use PhpPdo\Driver\DriverInterface;
-use PhpPdo\Test\Php\TestBase;
-use PHPUnit\Util\Test;
 
 /**
  * Represents a prepared statement and, after the statement is executed, an associated result set.
@@ -32,7 +30,7 @@ class PDOStatement implements IteratorAggregate
     {
         $this->fields = null;
 
-        return odbc_execute($this->handle);
+        return $this->driver->execute($this->handle);
     }
 
     public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
@@ -43,7 +41,7 @@ class PDOStatement implements IteratorAggregate
         $result = [];
         while ($r = $this->fetchRowInternal($flags, $how, $second, $third)) {
             if (PhpPdo::FETCH_GROUP & $flags){
-                $f = array_shift($r);
+                $f = \array_shift($r);
                 $result[$f[0]][] = $r;
             } else {
                 $result[] = $r;
@@ -61,7 +59,10 @@ class PDOStatement implements IteratorAggregate
      */
     public function fetch(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null)
     {
-        return $this->fetchRowInternal($mode, $second, $third);
+        $flags = $mode & self::PDO_FETCH_FLAGS;
+        $how   = $mode & ~self::PDO_FETCH_FLAGS;
+
+        return $this->fetchRowInternal($flags,$how, $mode, $second, $third);
     }
 
 
@@ -94,6 +95,9 @@ class PDOStatement implements IteratorAggregate
         throw new PDOException('Something wrong!');
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function fetchClass($fields, $r, ?string $class = 'stdClass', ?array $constructorArgs = null): object
     {
         $reflectionClass = new \ReflectionClass($class);
@@ -132,7 +136,7 @@ class PDOStatement implements IteratorAggregate
     private function fetchFields(): array
     {
         if (null === $this->fields) {
-            $this->fields = $this->driver->fetchFieds($this->handle);
+            $this->fields = $this->driver->fetchFields($this->handle);
         }
         return $this->fields;
     }
