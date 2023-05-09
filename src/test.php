@@ -19,5 +19,5 @@ $pdo = new PhpPdo('pdo3', 'user', 'secret');
 
 $res = $pdo->prepare('select * from test;');
 $res->execute();
-$t = $res->fetchAll(PhpPdo::FETCH_ASSOC);
-var_dump($t);
+$r = $res->fetchAll(PhpPdo::FETCH_BOTH);
+var_dump($r);

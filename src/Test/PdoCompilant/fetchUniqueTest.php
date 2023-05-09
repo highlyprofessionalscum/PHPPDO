@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace PhpPdo\Test\Php\PdoCompilant;
+namespace PhpPdo\Test\PdoCompilant;
 use PhpPdo\PhpPdo;
 use PhpPdo\Test\PhpPdoTestCase;
-use PHPUnit\Framework\TestCase;
 
 class fetchUniqueTest extends PhpPdoTestCase
 {

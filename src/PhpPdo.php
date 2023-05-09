@@ -41,7 +41,7 @@ class PhpPdo implements PhpPdoInterface
         // TODO: Implement errorInfo() method.
     }
 
-    public function exec(string $statement): bool
+    public function exec(string $statement)
     {
         return $this->driver->exec($statement);
     }

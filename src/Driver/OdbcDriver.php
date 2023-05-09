@@ -17,7 +17,7 @@ class OdbcDriver implements DriverInterface
             $user, $password);
     }
 
-    public function exec(string $sql): bool
+    public function exec(string $sql)
     {
         return @\odbc_exec($this->connection, $sql);
     }
@@ -32,7 +32,7 @@ class OdbcDriver implements DriverInterface
         return \odbc_errormsg($this->connection);
     }
 
-    public function prepare(string $sql): bool
+    public function prepare(string $sql)
     {
         return \odbc_prepare($this->connection, $sql);
     }

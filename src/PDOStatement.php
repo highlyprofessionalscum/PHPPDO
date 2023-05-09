@@ -95,7 +95,16 @@ class PDOStatement implements IteratorAggregate
             if(null === $second){
                 return (object)$r;
             }
-            return $this->fetchClass($fields, $r, $second, $third);
+            $className = $second;
+            $constructorArgs = $third;
+
+            if ($flags & PhpPdo::FETCH_CLASSTYPE) {
+                $className = \array_shift($r);
+                if (null === $className){
+                    $className = $second;
+                }
+            }
+            return $this->fetchClass($fields, $r, $className, $constructorArgs);
         } else {
             throw new PDOException('Wrong Mode!');
         }
@@ -134,8 +143,12 @@ class PDOStatement implements IteratorAggregate
             }
         }
 
-        if (null !== $constructorArgs) {
-            $class->__construct(...$constructorArgs);
+        if (method_exists($class, '__construct')){
+            if (null !== $constructorArgs) {
+                $class->__construct(...$constructorArgs);
+            } else {
+                $class->__construct();
+            }
         }
 
         return $class;
