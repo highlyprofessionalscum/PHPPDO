@@ -33,6 +33,9 @@ class PDOStatement implements IteratorAggregate
         return $this->driver->execute($this->handle);
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
     {
         $flags = $mode & self::PDO_FETCH_FLAGS;
@@ -41,9 +44,9 @@ class PDOStatement implements IteratorAggregate
         $result = [];
         while ($r = $this->fetchRowInternal($flags, $how, $second, $third)) {
             if (($flags & PhpPdo::FETCH_UNIQUE) === PhpPdo::FETCH_UNIQUE) {
-                $result[array_shift($r)] = $r;
+                $result[\array_shift($r)] = $r;
             }elseif ((PhpPdo::FETCH_GROUP & $flags)) {
-                $f = array_shift($r);
+                $f = \array_shift($r);
                 $result[$f[0]][] = $r;
             } else {
                 $result[] = $r;
@@ -68,6 +71,9 @@ class PDOStatement implements IteratorAggregate
     }
 
 
+    /**
+     * @throws \ReflectionException
+     */
     private function fetchRowInternal(int $flags, int $how, $second, $third)
     {
         $fields = $this->fetchFields();
@@ -80,9 +86,9 @@ class PDOStatement implements IteratorAggregate
         if (PhpPdo::FETCH_ASSOC === $how) {
             return $r;
         } elseif (PhpPdo::FETCH_NUM === $how) {
-            return array_values($r);
+            return \array_values($r);
         } elseif ((PhpPdo::FETCH_BOTH === $how) || (PhpPdo::FETCH_DEFAULT === $how)) {
-            return array_merge($r, array_values($r));
+            return \array_merge($r, array_values($r));
         } elseif (PhpPdo::FETCH_OBJ === $how) {
             return (object)$r;
         } elseif (PhpPdo::FETCH_CLASS === $how) {
@@ -111,16 +117,16 @@ class PDOStatement implements IteratorAggregate
         }
 
         foreach ($r as $field => $value) {
-            if (array_key_exists($field, $properties)) {
+            if (\array_key_exists($field, $properties)) {
                 $p = $reflectionClass->getProperty($field);
 
-                if (version_compare(PHP_VERSION, '8.1.0', '<')) {
+                if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
                     $p->setAccessible(true);
                 }
 
                 $p->setValue($class, $value);
 
-                if (version_compare(PHP_VERSION, '8.1.0', '<')) {
+                if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
                     $p->setAccessible(false);
                 }
             } else {
@@ -140,6 +146,7 @@ class PDOStatement implements IteratorAggregate
         if (null === $this->fields) {
             $this->fields = $this->driver->fetchFields($this->handle);
         }
+
         return $this->fields;
     }
 

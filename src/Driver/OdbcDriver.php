@@ -17,13 +17,14 @@ class OdbcDriver implements DriverInterface
             $user, $password);
     }
 
-    public function exec(string $sql)
+    public function exec(string $sql): bool
     {
         return @\odbc_exec($this->connection, $sql);
     }
 
-    public function errorCode($statement)
+    public function errorCode(): string
     {
+        return \odbc_error($this->connection);
     }
 
     public function errorInfo(): string
@@ -58,7 +59,7 @@ class OdbcDriver implements DriverInterface
         return $fields;
     }
 
-    public function execute($statement)
+    public function execute($statement): bool
     {
         return \odbc_execute($statement);
     }

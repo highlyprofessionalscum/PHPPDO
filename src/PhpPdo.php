@@ -41,7 +41,7 @@ class PhpPdo implements PhpPdoInterface
         // TODO: Implement errorInfo() method.
     }
 
-    public function exec(string $statement)
+    public function exec(string $statement): bool
     {
         return $this->driver->exec($statement);
     }
@@ -81,14 +81,26 @@ class PhpPdo implements PhpPdoInterface
         $result = $reflectionClass->newInstanceWithoutConstructor();
 
         $reflectionProperty = $reflectionClass->getProperty('driver');
-        $reflectionProperty->setAccessible(true);
+        if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
+            $reflectionProperty->setAccessible(true);
+        }
+
         $reflectionProperty->setValue($result, $this->driver);
-        $reflectionProperty->setAccessible(false);
+
+        if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
+            $reflectionProperty->setAccessible(false);
+        }
 
         $reflectionProperty = $reflectionClass->getProperty('handle');
-        $reflectionProperty->setAccessible(true);
+        if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
+            $reflectionProperty->setAccessible(true);
+        }
+
         $reflectionProperty->setValue($result, $statement);
-        $reflectionProperty->setAccessible(false);
+
+        if (\version_compare(PHP_VERSION, '8.1.0', '<')) {
+            $reflectionProperty->setAccessible(false);
+        }
 
         return $result;
     }
