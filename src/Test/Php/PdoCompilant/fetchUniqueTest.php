@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace PhpPdo\Test;
-use PhpPdo\PdoInterface;
+namespace PhpPdo\Test\Php\PdoCompilant;
 use PhpPdo\PhpPdo;
+use PhpPdo\Test\PhpPdoTestCase;
 use PHPUnit\Framework\TestCase;
-class fetchUniueTest extends TestCase
+
+class fetchUniqueTest extends PhpPdoTestCase
 {
 
     public function setUp(): void

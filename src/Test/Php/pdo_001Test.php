@@ -4,12 +4,13 @@ declare(strict_types=1);
 namespace PhpPdo\Test\Php;
 
 use PhpPdo\PdoInterface;
+use PhpPdo\Test\PhpPdoTestCase;
 use PHPUnit\Framework\TestCase;
 
 use PhpPdo\PhpPdo;
 use function PHPUnit\Framework\assertEquals;
 
-final class pdo_001Test extends TestCase
+final class pdo_001Test extends PhpPdoTestCase
 {
     public function setUp(): void
     {

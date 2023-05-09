@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace PhpPdo\Test\Php;
 
 use PhpPdo\PdoInterface;
+use PhpPdo\Test\PhpPdoTestCase;
 use PHPUnit\Framework\TestCase;
 
 use PhpPdo\PhpPdo;
@@ -32,7 +33,7 @@ class TestDerived extends TestBase
     }
 }
 
-final class pdo_005Test extends TestCase
+final class pdo_005Test extends PhpPdoTestCase
 {
     public function setUp(): void
     {
@@ -45,14 +46,6 @@ final class pdo_005Test extends TestCase
         foreach ($test_tables as $table) {
             $db->exec("DROP TABLE $table");
         }
-    }
-
-    public static function getProperty($object, $property)
-    {
-        $reflectedClass = new \ReflectionClass($object);
-        $reflection = $reflectedClass->getProperty($property);
-        $reflection->setAccessible(true);
-        return $reflection->getValue($object);
     }
 
     public function test_FETCH_CLASS(): void
