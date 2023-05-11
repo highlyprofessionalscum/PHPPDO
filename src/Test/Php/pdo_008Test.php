@@ -37,7 +37,7 @@ class pdo_008Test extends PhpPdoTestCase
         $res = $stmt->fetchAll(PhpPdo::FETCH_NUM | PhpPdo::FETCH_UNIQUE);
 
         $this->assertSame('B', $res['A'][0]);
-        $this->assertSame('C', $res['D'][0]);
+        $this->assertSame('C', $res['C'][0]);
 
     }
 

@@ -47,7 +47,7 @@ class PDOStatement implements IteratorAggregate
                 $result[\array_shift($r)] = $r;
             }elseif ((PhpPdo::FETCH_GROUP & $flags)) {
                 $f = \array_shift($r);
-                $result[$f[0]][] = $r;
+                $result[$f][] = $r;
             } else {
                 $result[] = $r;
             }
@@ -97,12 +97,14 @@ class PDOStatement implements IteratorAggregate
             }
             $className = $second;
             $constructorArgs = $third;
-
             if ($flags & PhpPdo::FETCH_CLASSTYPE) {
                 $className = \array_shift($r);
                 if (null === $className){
                     $className = $second;
                 }
+            }
+            if ($flags & PhpPdo::FETCH_GROUP){
+                return [\array_shift($r), $this->fetchClass($fields, $r, $className, $constructorArgs)];
             }
             return $this->fetchClass($fields, $r, $className, $constructorArgs);
         } else {
