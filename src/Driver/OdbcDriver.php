@@ -38,9 +38,19 @@ class OdbcDriver implements DriverInterface
     }
 
 
-    public function fetchRow($statement)
+    public function fetchAssoc($statement, ?int $row_number = null)
     {
-        return \odbc_fetch_array($statement);
+        return \odbc_fetch_array($statement, $row_number);
+    }
+
+    public function fetchNum($statement, ?int $row_number = null)
+    {
+        return \odbc_fetch_row($statement, $row_number);
+    }
+
+    public function fetchObj($statement, ?int $rownumber = null)
+    {
+        return \odbc_fetch_object($statement, $rownumber);
     }
 
     public function fetchFields($statement): array

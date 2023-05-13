@@ -13,7 +13,7 @@ use PhpPdo\Driver\DriverInterface;
  */
 class PDOStatement implements IteratorAggregate
 {
-    private const PDO_FETCH_FLAGS =0xFFFF0000;  /* fetchAll() modes or'd to PDO_FETCH_XYZ */
+    private const PDO_FETCH_FLAGS = 0xFFFF0000;  /* fetchAll() modes or'd to PDO_FETCH_XYZ */
 
     public string $queryString;
     private $handle;
@@ -39,15 +39,15 @@ class PDOStatement implements IteratorAggregate
     public function fetchAll(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null): array
     {
         $flags = $mode & self::PDO_FETCH_FLAGS;
-        $how   = $mode & ~self::PDO_FETCH_FLAGS;
+        $how = $mode & ~self::PDO_FETCH_FLAGS;
 
         $result = [];
-        while ($r = $this->fetchRowInternal($flags, $how, $second, $third)) {
+        $raw = [];
+        while ($r = $this->fetchRowInternal($raw, $flags, $how, $second, $third)) {
             if (($flags & PhpPdo::FETCH_UNIQUE) === PhpPdo::FETCH_UNIQUE) {
-                $result[\array_shift($r)] = $r;
-            }elseif ((PhpPdo::FETCH_GROUP & $flags)) {
-                $f = \array_shift($r);
-                $result[$f][] = $r;
+                $result[\array_shift($raw)] = $r;
+            } elseif ((PhpPdo::FETCH_GROUP & $flags)) {
+                $result[\array_shift($raw)][] = $r;
             } else {
                 $result[] = $r;
             }
@@ -64,51 +64,56 @@ class PDOStatement implements IteratorAggregate
      */
     public function fetch(int $mode = PhpPdo::FETCH_DEFAULT, $second = null, $third = null)
     {
+        $raw = [];
         $flags = $mode & self::PDO_FETCH_FLAGS;
-        $how   = $mode & ~self::PDO_FETCH_FLAGS;
+        $how = $mode & ~self::PDO_FETCH_FLAGS;
 
-        return $this->fetchRowInternal($flags,$how, $mode, $second, $third);
+        return $this->fetchRowInternal($raw, $flags, $how, $second, $third);
     }
 
 
     /**
      * @throws \ReflectionException
      */
-    private function fetchRowInternal(int $flags, int $how, $second, $third)
+    private function fetchRowInternal(&$raw, int $flags, int $how, $second, $third)
     {
-        $fields = $this->fetchFields();
-        $r = $this->driver->fetchRow($this->handle);
-
-        if (false === $r) {
-            return false;
+        // hot path
+        if (PhpPdo::FETCH_ASSOC === $how) {
+            return $raw = $this->driver->fetchAssoc($this->handle);
+        } elseif (PhpPdo::FETCH_NUM === $how) {
+            return $raw = $this->driver->fetchNum($this->handle);
+        } elseif ((PhpPdo::FETCH_BOTH === $how) || (PhpPdo::FETCH_DEFAULT === $how)) {
+            $raw = $this->driver->fetchAssoc($this->handle);;
+            return \array_merge($raw, array_values($raw));
+        } elseif (PhpPdo::FETCH_OBJ === $how) {
+            return $raw = $this->driver->fetchObj($this->handle);
         }
 
-        if (PhpPdo::FETCH_ASSOC === $how) {
-            return $r;
-        } elseif (PhpPdo::FETCH_NUM === $how) {
-            return \array_values($r);
-        } elseif ((PhpPdo::FETCH_BOTH === $how) || (PhpPdo::FETCH_DEFAULT === $how)) {
-            return \array_merge($r, array_values($r));
-        } elseif (PhpPdo::FETCH_OBJ === $how) {
-            return (object)$r;
-        } elseif (PhpPdo::FETCH_CLASS === $how) {
-            if(null === $second){
+        $fields = $this->fetchFields();
+        $r = $raw = $this->driver->fetchAssoc($this->handle);
+
+        if (PhpPdo::FETCH_CLASS === $how) {
+            if (null === $second) {
                 return (object)$r;
             }
             $className = $second;
             $constructorArgs = $third;
             if ($flags & PhpPdo::FETCH_CLASSTYPE) {
                 $className = \array_shift($r);
-                if (null === $className){
+                if (null === $className) {
                     $className = $second;
                 }
             }
-            if ($flags & PhpPdo::FETCH_GROUP){
-                return [\array_shift($r), $this->fetchClass($fields, $r, $className, $constructorArgs)];
-            }
             return $this->fetchClass($fields, $r, $className, $constructorArgs);
+
+        } elseif (PhpPdo::FETCH_FUNC === $how) {
+            if (!is_callable($second)) {
+                throw new PDOException('No fetch function specified');
+            }
+            return $second(...array_values($r));
+
         } else {
-            throw new PDOException('Wrong Mode!');
+            throw new PDOException('Fetch mode must be a bitmask of PDO::FETCH_* constants');
         }
 
         throw new PDOException('Something wrong!');
@@ -145,7 +150,7 @@ class PDOStatement implements IteratorAggregate
             }
         }
 
-        if (method_exists($class, '__construct')){
+        if (method_exists($class, '__construct')) {
             if (null !== $constructorArgs) {
                 $class->__construct(...$constructorArgs);
             } else {
@@ -170,7 +175,7 @@ class PDOStatement implements IteratorAggregate
         return $this->driver->errorInfo($this->handle);
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         // TODO: Implement getIterator() method.
     }
