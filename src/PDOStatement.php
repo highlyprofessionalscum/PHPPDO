@@ -42,12 +42,12 @@ class PDOStatement implements IteratorAggregate
         $how = $mode & ~self::PDO_FETCH_FLAGS;
 
         $result = [];
-        $raw = [];
-        while ($r = $this->fetchRowInternal($raw, $flags, $how, $second, $third)) {
+        $group = null;
+        while ($r = $this->fetchRowInternal($group, $flags, $how, $second, $third)) {
             if (($flags & PhpPdo::FETCH_UNIQUE) === PhpPdo::FETCH_UNIQUE) {
-                $result[\array_shift($raw)] = $r;
+                $result[\array_shift($r)] = $r;
             } elseif ((PhpPdo::FETCH_GROUP & $flags)) {
-                $result[\array_shift($raw)][] = $r;
+                $result[$group][] = $r;
             } else {
                 $result[] = $r;
             }
@@ -75,22 +75,30 @@ class PDOStatement implements IteratorAggregate
     /**
      * @throws \ReflectionException
      */
-    private function fetchRowInternal(&$raw, int $flags, int $how, $second, $third)
+    private function fetchRowInternal(&$group, int $flags, int $how, $second, $third)
     {
         // hot path
+        $r = $this->driver->fetchAssoc($this->handle);
+
+        if (false === $r) return false;
+
+        if ((PhpPdo::FETCH_GROUP & $flags)) {
+            if (($flags & PhpPdo::FETCH_UNIQUE) !== PhpPdo::FETCH_UNIQUE) {
+                $group = \array_shift($r);
+            }
+        }
+
         if (PhpPdo::FETCH_ASSOC === $how) {
-            return $raw = $this->driver->fetchAssoc($this->handle);
+            return $r;
         } elseif (PhpPdo::FETCH_NUM === $how) {
-            return $raw = $this->driver->fetchNum($this->handle);
+            return array_values($r);
         } elseif ((PhpPdo::FETCH_BOTH === $how) || (PhpPdo::FETCH_DEFAULT === $how)) {
-            $raw = $this->driver->fetchAssoc($this->handle);;
-            return \array_merge($raw, array_values($raw));
+            return \array_merge($r, array_values($r));
         } elseif (PhpPdo::FETCH_OBJ === $how) {
-            return $raw = $this->driver->fetchObj($this->handle);
+            return (object)$r;
         }
 
         $fields = $this->fetchFields();
-        $r = $raw = $this->driver->fetchAssoc($this->handle);
 
         if (PhpPdo::FETCH_CLASS === $how) {
             if (null === $second) {
@@ -99,7 +107,16 @@ class PDOStatement implements IteratorAggregate
             $className = $second;
             $constructorArgs = $third;
             if ($flags & PhpPdo::FETCH_CLASSTYPE) {
-                $className = \array_shift($r);
+
+                if ((PhpPdo::FETCH_GROUP & $flags)) {
+                    if (($flags & PhpPdo::FETCH_UNIQUE) !== PhpPdo::FETCH_UNIQUE) {
+                        $className = $group;
+                        $group = \array_shift($r);
+                    }
+                } else {
+                    $className = \array_shift($r);
+                }
+
                 if (null === $className) {
                     $className = $second;
                 }
@@ -110,8 +127,13 @@ class PDOStatement implements IteratorAggregate
             if (!is_callable($second)) {
                 throw new PDOException('No fetch function specified');
             }
-            return $second(...array_values($r));
 
+            if (\is_array($second)) {
+                $res = \call_user_func_array($second, ...\array_values($r));
+            } else {
+                $res = $second(...array_values($r));
+            }
+            return $res;
         } else {
             throw new PDOException('Fetch mode must be a bitmask of PDO::FETCH_* constants');
         }
